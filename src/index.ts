@@ -8,8 +8,7 @@ import cookieParser = require("cookie-parser");
 dotenv.config();
 
 const app: Express = express();
-const port = process.env.PORT;
-const domain = process.env.DOMAIN;
+const port = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
