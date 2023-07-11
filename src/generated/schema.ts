@@ -14,7 +14,7 @@ export interface paths {
       responses: {
         200: components["responses"]["SessionGetSuccess"];
         401: components["responses"]["Unauthorized"];
-        500: components["responses"]["SessionGetError"];
+        500: components["responses"]["DatabaseError"];
       };
     };
     /**
@@ -26,7 +26,7 @@ export interface paths {
         /** @description Session deleted */
         200: never;
         401: components["responses"]["Unauthorized"];
-        500: components["responses"]["SessionDeleteError"];
+        500: components["responses"]["DatabaseError"];
       };
     };
   };
@@ -45,7 +45,8 @@ export interface paths {
       responses: {
         201: components["responses"]["AuthSuccess"];
         400: components["responses"]["AuthByEmailFailed"];
-        500: components["responses"]["AuthByEmailError"];
+        422: components["responses"]["InvalidValidation"];
+        500: components["responses"]["DatabaseError"];
       };
     };
   };
@@ -64,7 +65,8 @@ export interface paths {
       responses: {
         201: components["responses"]["AuthSuccess"];
         400: components["responses"]["AuthByPasswordFailed"];
-        500: components["responses"]["AuthByPasswordError"];
+        422: components["responses"]["InvalidValidation"];
+        500: components["responses"]["DatabaseError"];
       };
     };
   };
@@ -78,12 +80,12 @@ export interface paths {
       responses: {
         /** @description Mail was successfully sent */
         200: never;
-        400: components["responses"]["SendCodeFailed"];
+        422: components["responses"]["InvalidValidation"];
         500: components["responses"]["SendCodeError"];
       };
     };
   };
-  "/user/{name}": {
+  "/user/:name": {
     /**
      * Get user main info by username 
      * @description Returns user's main data by username, if exist
@@ -97,11 +99,12 @@ export interface paths {
       responses: {
         200: components["responses"]["UserGetByUsernameSuccess"];
         400: components["responses"]["UserGetByUsernameFailed"];
-        500: components["responses"]["UserGetByUsernameError"];
+        422: components["responses"]["InvalidValidation"];
+        500: components["responses"]["PostgreSQLError"];
       };
     };
   };
-  "/user/check-name/{name}": {
+  "/user/check-name/:name": {
     /**
      * Check name on name already used 
      * @description Checks specified name on already exist
@@ -116,7 +119,8 @@ export interface paths {
         /** @description This name isn't in use */
         200: never;
         400: components["responses"]["CheckNameFailed"];
-        500: components["responses"]["CheckNameError"];
+        422: components["responses"]["InvalidValidation"];
+        500: components["responses"]["PostgreSQLError"];
       };
     };
   };
@@ -130,9 +134,9 @@ export interface paths {
       responses: {
         /** @description Updated */
         200: never;
-        400: components["responses"]["UserPatchFailed"];
         401: components["responses"]["Unauthorized"];
-        500: components["responses"]["UserPatchError"];
+        422: components["responses"]["InvalidValidation"];
+        500: components["responses"]["PostgreSQLError"];
       };
     };
   };
@@ -148,7 +152,8 @@ export interface paths {
         200: never;
         400: components["responses"]["UserPasswordPatchFailed"];
         401: components["responses"]["Unauthorized"];
-        500: components["responses"]["UserPasswordPatchError"];
+        422: components["responses"]["InvalidValidation"];
+        500: components["responses"]["PostgreSQLError"];
       };
     };
   };
@@ -164,7 +169,8 @@ export interface paths {
         200: never;
         400: components["responses"]["UserEmailPatchFailed"];
         401: components["responses"]["Unauthorized"];
-        500: components["responses"]["UserEmailPatchError"];
+        422: components["responses"]["InvalidValidation"];
+        500: components["responses"]["PostgreSQLError"];
       };
     };
   };
@@ -180,7 +186,45 @@ export interface paths {
         200: never;
         400: components["responses"]["UserNamePatchFailed"];
         401: components["responses"]["Unauthorized"];
-        500: components["responses"]["UserNamePatchError"];
+        422: components["responses"]["InvalidValidation"];
+        500: components["responses"]["PostgreSQLError"];
+      };
+    };
+  };
+  "/room": {
+    /**
+     * Upsert user's room, and connect to it 
+     * @description Creates (or updates, if exists) the room. Room created once, after first account query.
+     */
+    put: {
+      requestBody: components["requestBodies"]["RoomPut"];
+      responses: {
+        /** @description Room opened */
+        200: never;
+        400: components["responses"]["UserNamePatchFailed"];
+        401: components["responses"]["Unauthorized"];
+        422: components["responses"]["InvalidValidation"];
+        500: components["responses"]["PostgreSQLError"];
+      };
+    };
+  };
+  "/room/:name": {
+    /**
+     * Connect to user's room by websocket 
+     * @description Open web socket connection to user's room
+     */
+    get: {
+      parameters: {
+        path: {
+          name: components["parameters"]["Name"];
+        };
+      };
+      responses: {
+        /** @description Joined to room */
+        200: never;
+        400: components["responses"]["UserNamePatchFailed"];
+        422: components["responses"]["InvalidValidation"];
+        500: components["responses"]["PostgreSQLError"];
       };
     };
   };
@@ -190,42 +234,6 @@ export type webhooks = Record<string, never>;
 
 export interface components {
   schemas: {
-    readonly User: {
-      readonly name: components["schemas"]["Name"];
-      readonly biography?: components["schemas"]["Biography"];
-      readonly role: components["schemas"]["Role"];
-      readonly friendsIds: components["schemas"]["FriendsIds"];
-      readonly firstName?: components["schemas"]["FirstName"];
-      readonly lastName?: components["schemas"]["LastName"];
-      readonly createTime: components["schemas"]["CreateTime"];
-    };
-    readonly Me: {
-      readonly name: components["schemas"]["Name"];
-      readonly email: components["schemas"]["Email"];
-      readonly role: components["schemas"]["Role"];
-      readonly friendsIds: components["schemas"]["FriendsIds"];
-      readonly language: components["schemas"]["Language"];
-      readonly theme: components["schemas"]["Theme"];
-      readonly firstName?: components["schemas"]["FirstName"];
-      readonly lastName?: components["schemas"]["LastName"];
-      readonly biography?: components["schemas"]["Biography"];
-      readonly createTime: components["schemas"]["CreateTime"];
-      /** @example false */
-      readonly isEmailVerified: boolean;
-    };
-    readonly Error: {
-      /** @example You are not logged in */
-      readonly description?: string;
-      /**
-       * @example {
-       *   "email": "email is not the correct email",
-       *   "code": "code must have a length of 5"
-       * }
-       */
-      readonly fields?: {
-        [key: string]: string | undefined;
-      };
-    };
     /** @example user95 */
     Name: string;
     /**
@@ -241,20 +249,20 @@ export interface components {
     /** @example QUERY */
     Code: string;
     /**
-     * @example SYSTEM 
+     * @example system 
      * @enum {string}
      */
-    Theme: "DARK" | "LIGHT" | "SYSTEM";
+    Theme: "dark" | "light" | "system";
     /**
-     * @example RU 
+     * @example ru 
      * @enum {string}
      */
-    Language: "EN" | "RU";
+    Language: "en" | "ru";
     /**
-     * @example USER 
+     * @example user 
      * @enum {string}
      */
-    Role: "USER" | "ADMIN";
+    Role: "user" | "admin";
     /** @example Bomb */
     FirstName: string;
     /** @example Hodovaniuk */
@@ -262,12 +270,62 @@ export interface components {
     readonly FriendsIds: readonly (number)[];
     /** @example 23 y.o designer from San Francisco */
     Biography: string;
+    /** @example false */
+    readonly IsEmailVerified: boolean;
     /**
      * Format: date-time 
      * @example "2023-06-10T12:06:14.491Z"
      */
     readonly CreateTime: string;
+    /**
+     * @example public 
+     * @enum {string}
+     */
+    Privacy: "public" | "private" | "friends";
     readonly Sessions: readonly (string)[];
+    readonly User: {
+      readonly name: components["schemas"]["Name"];
+      readonly biography?: components["schemas"]["Biography"];
+      readonly role: components["schemas"]["Role"];
+      readonly friendsIds: components["schemas"]["FriendsIds"];
+      readonly firstName?: components["schemas"]["FirstName"];
+      readonly lastName?: components["schemas"]["LastName"];
+      readonly createTime: components["schemas"]["CreateTime"];
+    };
+    readonly Me: {
+      readonly name: components["schemas"]["Name"];
+      readonly email: components["schemas"]["Email"];
+      readonly role: components["schemas"]["Role"];
+      readonly friendsIds?: components["schemas"]["FriendsIds"];
+      readonly language: components["schemas"]["Language"];
+      readonly theme: components["schemas"]["Theme"];
+      readonly firstName?: components["schemas"]["FirstName"];
+      readonly lastName?: components["schemas"]["LastName"];
+      readonly biography?: components["schemas"]["Biography"];
+      readonly createTime: components["schemas"]["CreateTime"];
+      readonly isEmailVerified: components["schemas"]["IsEmailVerified"];
+    };
+    Room: {
+      title?: components["schemas"]["Name"];
+      privacy?: components["schemas"]["Privacy"];
+      description?: components["schemas"]["Biography"];
+      password?: components["schemas"]["Password"];
+    };
+    readonly Error: {
+      /** @example You are not logged in */
+      readonly description?: string;
+    };
+    readonly ValidationError: {
+      /**
+       * @example {
+       *   "email": "email is not the correct email",
+       *   "code": "code must have a length of 5"
+       * }
+       */
+      readonly fields?: {
+        [key: string]: string | undefined;
+      };
+    };
   };
   responses: {
     /** @description User's info by session */
@@ -276,57 +334,39 @@ export interface components {
         "application/json": components["schemas"]["Me"];
       };
     };
-    /** @description Lost connection to Redis */
-    SessionGetError: {
+    /** @description User was successfully got */
+    UserGetByUsernameSuccess: {
       content: {
-        "application/json": ({
-          /**
-           * @example transaction_failed 
-           * @enum {string}
-           */
-          code: "server_error" | "transaction_failed";
-        }) & components["schemas"]["Error"];
-      };
-    };
-    /** @description Lost connection to Redis */
-    SessionDeleteError: {
-      content: {
-        "application/json": ({
-          /**
-           * @example transaction_failed 
-           * @enum {string}
-           */
-          code: "server_error" | "transaction_failed";
-        }) & components["schemas"]["Error"];
+        "application/json": components["schemas"]["User"];
       };
     };
     /** @description OK */
     AuthSuccess: never;
-    /** @description Check or recover your credentials */
+    /** @description User must be authorized */
+    Unauthorized: {
+      content: {
+        "application/json": components["schemas"]["Error"];
+      };
+    };
+    /** @description Data entered incorrectly */
+    InvalidValidation: {
+      content: {
+        "application/json": components["schemas"]["ValidationError"];
+      };
+    };
+    /** @description Invalid email code */
     AuthByEmailFailed: {
       content: {
-        "application/json": ({
+        "application/json": {
           /**
-           * @example invalid_validation 
+           * @example code_invalid_or_expired 
            * @enum {string}
            */
-          code: "invalid_validation" | "code_invalid_or_expired";
-        }) & components["schemas"]["Error"];
+          code: "code_invalid_or_expired";
+        } & components["schemas"]["Error"];
       };
     };
-    /** @description Can't use PostgreSQL connection */
-    AuthByEmailError: {
-      content: {
-        "application/json": ({
-          /**
-           * @example transaction_failed 
-           * @enum {string}
-           */
-          code: "server_error" | "transaction_failed";
-        }) & components["schemas"]["Error"];
-      };
-    };
-    /** @description Check or recover your credentials */
+    /** @description Failed to authorize user */
     AuthByPasswordFailed: {
       content: {
         "application/json": ({
@@ -334,36 +374,72 @@ export interface components {
            * @example invalid_password 
            * @enum {string}
            */
-          code: "invalid_password" | "invalid_validation" | "password_not_set";
-        }) & components["schemas"]["Error"];
-      };
-    };
-    /** @description Lost connection to Postgresql */
-    AuthByPasswordError: {
-      content: {
-        "application/json": ({
-          /**
-           * @example transaction_failed 
-           * @enum {string}
-           */
-          code: "server_error" | "transaction_failed";
+          code: "invalid_password" | "password_not_set";
         }) & components["schemas"]["Error"];
       };
     };
     /** @description Failed to check name on exist */
     CheckNameFailed: {
       content: {
-        "application/json": ({
+        "application/json": {
           /**
            * @example already_exist 
            * @enum {string}
            */
-          code: "already_exist" | "invalid_validation";
+          code: "already_exist";
+        } & components["schemas"]["Error"];
+      };
+    };
+    /** @description Failed to find the user */
+    UserGetByUsernameFailed: {
+      content: {
+        "application/json": {
+          /**
+           * @example not_found 
+           * @enum {string}
+           */
+          code: "not_found";
+        } & components["schemas"]["Error"];
+      };
+    };
+    /** @description Password is not valid */
+    UserPasswordPatchFailed: {
+      content: {
+        "application/json": {
+          /**
+           * @example invalid_password 
+           * @enum {string}
+           */
+          code: "invalid_password";
+        } & components["schemas"]["Error"];
+      };
+    };
+    /** @description Failed to edit user email */
+    UserEmailPatchFailed: {
+      content: {
+        "application/json": ({
+          /**
+           * @example invalid_password 
+           * @enum {string}
+           */
+          code: "invalid_password" | "already_exist" | "password_not_set";
         }) & components["schemas"]["Error"];
       };
     };
+    /** @description User name already exist */
+    UserNamePatchFailed: {
+      content: {
+        "application/json": {
+          /**
+           * @example already_exist 
+           * @enum {string}
+           */
+          code: "already_exist";
+        } & components["schemas"]["Error"];
+      };
+    };
     /** @description Lost connection to PostgreSQL */
-    CheckNameError: {
+    PostgreSQLError: {
       content: {
         "application/json": {
           /**
@@ -374,16 +450,16 @@ export interface components {
         } & components["schemas"]["Error"];
       };
     };
-    /** @description Failed to send mail message */
-    SendCodeFailed: {
+    /** @description Database connection lost */
+    DatabaseError: {
       content: {
-        "application/json": {
+        "application/json": ({
           /**
-           * @example invalid_validation 
+           * @example transaction_failed 
            * @enum {string}
            */
-          code: "invalid_validation";
-        } & components["schemas"]["Error"];
+          code: "server_error" | "transaction_failed";
+        }) & components["schemas"]["Error"];
       };
     };
     /** @description Can't submit data */
@@ -396,138 +472,6 @@ export interface components {
            */
           code: "cant_send_mail" | "transaction_failed" | "server_error";
         }) & components["schemas"]["Error"];
-      };
-    };
-    /** @description User was successfully got */
-    UserGetByUsernameSuccess: {
-      content: {
-        "application/json": components["schemas"]["User"];
-      };
-    };
-    /** @description Failed to get user */
-    UserGetByUsernameFailed: {
-      content: {
-        "application/json": ({
-          /**
-           * @example not_found 
-           * @enum {string}
-           */
-          code: "not_found" | "invalid_validation";
-        }) & components["schemas"]["Error"];
-      };
-    };
-    /** @description Lost connection to PostgreSQL */
-    UserGetByUsernameError: {
-      content: {
-        "application/json": {
-          /**
-           * @example server_error 
-           * @enum {string}
-           */
-          code: "server_error";
-        } & components["schemas"]["Error"];
-      };
-    };
-    /** @description Failed to edit user data */
-    UserPatchFailed: {
-      content: {
-        "application/json": {
-          /**
-           * @example invalid_validation 
-           * @enum {string}
-           */
-          code: "invalid_validation";
-        } & components["schemas"]["Error"];
-      };
-    };
-    /** @description Lost connection to PostgreSQL */
-    UserPatchError: {
-      content: {
-        "application/json": {
-          /**
-           * @example server_error 
-           * @enum {string}
-           */
-          code: "server_error";
-        } & components["schemas"]["Error"];
-      };
-    };
-    /** @description Failed to edit user password */
-    UserPasswordPatchFailed: {
-      content: {
-        "application/json": ({
-          /**
-           * @example invalid_password 
-           * @enum {string}
-           */
-          code: "invalid_validation" | "invalid_password";
-        }) & components["schemas"]["Error"];
-      };
-    };
-    /** @description Lost connection to PostgreSQL */
-    UserPasswordPatchError: {
-      content: {
-        "application/json": {
-          /**
-           * @example server_error 
-           * @enum {string}
-           */
-          code: "server_error";
-        } & components["schemas"]["Error"];
-      };
-    };
-    /** @description Failed to edit user email */
-    UserEmailPatchFailed: {
-      content: {
-        "application/json": ({
-          /**
-           * @example invalid_password 
-           * @enum {string}
-           */
-          code: "invalid_validation" | "invalid_password" | "already_exist" | "password_not_set";
-        }) & components["schemas"]["Error"];
-      };
-    };
-    /** @description Lost connection to PostgreSQL */
-    UserEmailPatchError: {
-      content: {
-        "application/json": {
-          /**
-           * @example server_error 
-           * @enum {string}
-           */
-          code: "server_error";
-        } & components["schemas"]["Error"];
-      };
-    };
-    /** @description Failed to edit user name */
-    UserNamePatchFailed: {
-      content: {
-        "application/json": ({
-          /**
-           * @example already_exist 
-           * @enum {string}
-           */
-          code: "invalid_validation" | "already_exist";
-        }) & components["schemas"]["Error"];
-      };
-    };
-    /** @description Lost connection to PostgreSQL */
-    UserNamePatchError: {
-      content: {
-        "application/json": {
-          /**
-           * @example server_error 
-           * @enum {string}
-           */
-          code: "server_error";
-        } & components["schemas"]["Error"];
-      };
-    };
-    /** @description User must be authorized */
-    Unauthorized: {
-      content: {
-        "application/json": components["schemas"]["Error"];
       };
     };
   };
@@ -591,6 +535,11 @@ export interface components {
         "application/json": {
           name: components["schemas"]["Name"];
         };
+      };
+    };
+    RoomPut: {
+      content: {
+        "application/json": components["schemas"]["Room"];
       };
     };
   };

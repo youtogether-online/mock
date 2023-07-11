@@ -20,24 +20,20 @@ const cookieValue = "abcd";
 const cookieOptions = {
   httpOnly: true,
   sameSite: "none" as const,
-  maxAge: 1000000,
+  maxAge: 100000000,
   secure: true,
 };
 
 app.get("/api/auth/session", (req: Request, res: Response) => {
   if (req.cookies.session_id === cookieValue) {
     const Session: components["schemas"]["Me"] = {
-      createTime: new Date(faker.date.anytime().toString()).toISOString(),
-      email: faker.internet.email(),
-      friendsIds: [12, 24],
-      isEmailVerified: faker.datatype.boolean(),
-      language: "EN",
-      name: "user1234",
-      firstName: faker.person.firstName(),
-      lastName: faker.person.lastName(),
-      role: "USER",
-      theme: "LIGHT",
-      biography: faker.person.bio(),
+      name: "user2",
+      email: "f**m@icloud.com",
+      isEmailVerified: true,
+      role: "user",
+      language: "en",
+      theme: "system",
+      createTime: "2023-07-01T13:03:02.883385Z",
     };
 
     res.status(200).json(Session);
