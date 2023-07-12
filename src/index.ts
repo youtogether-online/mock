@@ -27,7 +27,8 @@ const cookieOptions = {
 app.get("/api/auth/session", (req: Request, res: Response) => {
   if (req.cookies.session_id === cookieValue) {
     const Session: components["schemas"]["Me"] = {
-      name: "user2",
+      name: `${faker.person.firstName.toString().toLowerCase()}
+        ${faker.person.lastName.toString().toLowerCase()}`,
       email: "f**m@icloud.com",
       isEmailVerified: true,
       role: "user",

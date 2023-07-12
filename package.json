@@ -7,7 +7,7 @@
     "build": "npx tsc",
     "start": "node dist/index.js",
     "dev": "concurrently \"npx tsc --watch\" \"nodemon -q dist/index.js\"",
-    "generate:types": "openapi-typescript https://youtogether-online.github.io/backend/OpenAPI.yaml -o ./src/generated/schema.ts"
+    "generate:types": "openapi-typescript ./src/docs/OpenAPI.yaml -o ./src/generated/schema.ts"
   },
   "keywords": [],
   "author": "",

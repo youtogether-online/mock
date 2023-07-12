@@ -38,7 +38,7 @@ export interface paths {
     post: {
       parameters: {
         header?: {
-          "Accept-Language"?: "EN" | "RU";
+          "Accept-Language"?: components["schemas"]["Language"];
         };
       };
       requestBody: components["requestBodies"]["AuthEmailPost"];
@@ -53,14 +53,9 @@ export interface paths {
   "/auth/password": {
     /**
      * Authorization via email with password 
-     * @description Authorize user with email and password. If user with specified email does not exist, create new user. Can be used for sign-in and sign-up.
+     * @description Authorize user with email and password. Can be used only for sign-in with registered password.
      */
     post: {
-      parameters: {
-        header?: {
-          "Accept-Language"?: "EN" | "RU";
-        };
-      };
       requestBody: components["requestBodies"]["AuthPasswordPost"];
       responses: {
         201: components["responses"]["AuthSuccess"];
@@ -174,6 +169,23 @@ export interface paths {
       };
     };
   };
+  "/user/image": {
+    /**
+     * Update user's main image 
+     * @description Updates user's main image
+     */
+    patch: {
+      requestBody: components["requestBodies"]["UserImagePatch"];
+      responses: {
+        /** @description Image updated */
+        200: never;
+        401: components["responses"]["Unauthorized"];
+        413: components["responses"]["ImageTooLarge"];
+        415: components["responses"]["UnsupportedImageType"];
+        500: components["responses"]["PostgreSQLError"];
+      };
+    };
+  };
   "/user/name": {
     /**
      * Update user name 
@@ -201,7 +213,7 @@ export interface paths {
       responses: {
         /** @description Room opened */
         200: never;
-        400: components["responses"]["UserNamePatchFailed"];
+        400: components["responses"]["WebsocketConnectionFailed"];
         401: components["responses"]["Unauthorized"];
         422: components["responses"]["InvalidValidation"];
         500: components["responses"]["PostgreSQLError"];
@@ -222,9 +234,27 @@ export interface paths {
       responses: {
         /** @description Joined to room */
         200: never;
-        400: components["responses"]["UserNamePatchFailed"];
+        400: components["responses"]["WebsocketConnectionFailed"];
         422: components["responses"]["InvalidValidation"];
         500: components["responses"]["PostgreSQLError"];
+      };
+    };
+  };
+  "/file/*filepath": {
+    /**
+     * Get server file 
+     * @description Open any server file by its name and extension
+     */
+    get: {
+      parameters: {
+        path: {
+          filepath: components["parameters"]["FileName"];
+        };
+      };
+      responses: {
+        200: components["responses"]["FileGetSuccess"];
+        /** @description File not found */
+        404: never;
       };
     };
   };
@@ -263,6 +293,8 @@ export interface components {
      * @enum {string}
      */
     Role: "user" | "admin";
+    /** @example qwertyuioppoiuytrewq.png */
+    ImageName: string;
     /** @example Bomb */
     FirstName: string;
     /** @example Hodovaniuk */
@@ -283,6 +315,11 @@ export interface components {
      */
     Privacy: "public" | "private" | "friends";
     readonly Sessions: readonly (string)[];
+    /**
+     * Format: binary 
+     * @example binary data
+     */
+    Image: string;
     readonly User: {
       readonly name: components["schemas"]["Name"];
       readonly biography?: components["schemas"]["Biography"];
@@ -342,6 +379,12 @@ export interface components {
     };
     /** @description OK */
     AuthSuccess: never;
+    /** @description File was successfully got */
+    FileGetSuccess: {
+      content: {
+        "multipart/form-data": components["schemas"]["Image"];
+      };
+    };
     /** @description User must be authorized */
     Unauthorized: {
       content: {
@@ -354,6 +397,18 @@ export interface components {
         "application/json": components["schemas"]["ValidationError"];
       };
     };
+    /** @description Image should have .png, .jpg or .jpeg extension */
+    UnsupportedImageType: {
+      content: {
+        "application/json": components["schemas"]["Error"];
+      };
+    };
+    /** @description Image must be smaller than 3000 by 3000 pixels */
+    ImageTooLarge: {
+      content: {
+        "application/json": components["schemas"]["Error"];
+      };
+    };
     /** @description Invalid email code */
     AuthByEmailFailed: {
       content: {
@@ -362,8 +417,8 @@ export interface components {
            * @example code_invalid_or_expired 
            * @enum {string}
            */
-          code: "code_invalid_or_expired";
-        } & components["schemas"]["Error"];
+          code: "code_invalid_or_expired" | "" | {"$ref":"components[\"schemas\"][\"Error\"]"};
+        };
       };
     };
     /** @description Failed to authorize user */
@@ -374,7 +429,7 @@ export interface components {
            * @example invalid_password 
            * @enum {string}
            */
-          code: "invalid_password" | "password_not_set";
+          code: "invalid_password" | "password_not_set" | "not_found";
         }) & components["schemas"]["Error"];
       };
     };
@@ -438,6 +493,18 @@ export interface components {
         } & components["schemas"]["Error"];
       };
     };
+    /** @description The connection is not a websocket */
+    WebsocketConnectionFailed: {
+      content: {
+        "application/json": {
+          /**
+           * @example websocket_excepted 
+           * @enum {string}
+           */
+          code: "websocket_excepted";
+        } & components["schemas"]["Error"];
+      };
+    };
     /** @description Lost connection to PostgreSQL */
     PostgreSQLError: {
       content: {
@@ -478,6 +545,8 @@ export interface components {
   parameters: {
     /** @description Name */
     Name: components["schemas"]["Name"];
+    /** @description File name and his extension */
+    FileName: components["schemas"]["ImageName"];
   };
   requestBodies: {
     AuthEmailPost: {
@@ -505,7 +574,7 @@ export interface components {
     };
     UserPatch: {
       content: {
-        "application/json": {
+        "multipart/form-data": {
           firstName?: components["schemas"]["FirstName"];
           lastName?: components["schemas"]["LastName"];
           biography?: components["schemas"]["Biography"];
@@ -527,6 +596,13 @@ export interface components {
         "application/json": {
           newEmail: components["schemas"]["Email"];
           password: components["schemas"]["Password"];
+        };
+      };
+    };
+    UserImagePatch: {
+      content: {
+        "multipart/form-data": {
+          file?: components["schemas"]["Image"];
         };
       };
     };

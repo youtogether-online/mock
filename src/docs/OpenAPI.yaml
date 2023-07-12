@@ -1,0 +1,909 @@
+openapi: 3.0.3
+
+info:
+  title: YouTogether API
+  description: |-
+    This is CRUD API documentation for you-together-online project.
+    You can get more info about that project [here](https://github.com/youtogether-online)
+  contact:
+    email: matvey-sizov@mail.ru
+  version: 1.0.0
+
+externalDocs:
+  description: Source code
+  url: https://github.com/youtogether-online/backend
+
+servers:
+  - url: http://localhost:3000/api
+    description: Backend local instance
+  - url: https://youtogether.localhost/api
+    description: Docker instance
+  - url: https://youtogether.frkam.dev/
+    description: Official website instance
+
+tags:
+  - name: Auth
+    description: Authenticate queries for user
+  - name: Email
+    description: Send messages from application smtp email
+  - name: User
+    description: User queries
+  - name: Room
+    description: Room queries
+
+paths:
+  /auth/session:
+    get:
+      tags: [ Auth ]
+      summary: Returns authorized user session data
+      description: Returns user session data from cookie session
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/SessionGetSuccess'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/DatabaseError'
+
+    delete:
+      tags: [ Auth ]
+      security:
+        - cookieAuth: []
+      summary: Deletes user session
+      description: Deletes user session and clear user session cookie
+      responses:
+        '200':
+          description: Session deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/DatabaseError'
+
+
+  /auth/email:
+    post:
+      tags: [ Auth ]
+      summary: Authorization via email
+      description: Authorize user with code that previously was sent to email. If user with specified email does not exist, create new user. Can be used for sign-in and sign-up.
+      requestBody:
+        $ref: "#/components/requestBodies/AuthEmailPost"
+      parameters:
+        - in: header
+          name: Accept-Language
+          schema:
+            $ref: '#/components/schemas/Language'
+      responses:
+        '201':
+          $ref: "#/components/responses/AuthSuccess"
+        '400':
+          $ref: "#/components/responses/AuthByEmailFailed"
+        '422':
+          $ref: "#/components/responses/InvalidValidation"
+        '500':
+          $ref: '#/components/responses/DatabaseError'
+
+  /auth/password:
+    post:
+      tags: [ Auth ]
+      summary: Authorization via email with password
+      description: Authorize user with email and password. Can be used only for sign-in with registered password.
+      requestBody:
+        $ref: "#/components/requestBodies/AuthPasswordPost"
+      responses:
+        '201':
+          $ref: '#/components/responses/AuthSuccess'
+        '400':
+          $ref: '#/components/responses/AuthByPasswordFailed'
+        '422':
+          $ref: "#/components/responses/InvalidValidation"
+        '500':
+          $ref: '#/components/responses/DatabaseError'
+
+  /email/send-code:
+    post:
+      tags: [ Email ]
+      summary: Send secret authorization code to specified email
+      description: Generates 5-digit string, saves it and sends it to specified email
+      requestBody:
+        $ref: "#/components/requestBodies/EmailSendCodePost"
+      responses:
+        '200':
+          description: Mail was successfully sent
+        '422':
+          $ref: "#/components/responses/InvalidValidation"
+        '500':
+          $ref: '#/components/responses/SendCodeError'
+  
+  /user/:name:
+    get:
+      tags: [ User ]
+      summary: Get user main info by username
+      description: Returns user's main data by username, if exist
+      parameters:
+        - $ref: "#/components/parameters/Name"
+      responses:
+        '200':
+          $ref: '#/components/responses/UserGetByUsernameSuccess'
+        '400':
+          $ref: '#/components/responses/UserGetByUsernameFailed'
+        '422':
+          $ref: "#/components/responses/InvalidValidation"
+        '500':
+          $ref: '#/components/responses/PostgreSQLError'
+
+  /user/check-name/:name:
+    get:
+      tags: [ User ]
+      summary: Check name on name already used
+      description: Checks specified name on already exist
+      parameters:
+        - $ref: "#/components/parameters/Name"
+      responses:
+        '200':
+          description: This name isn't in use
+        '400':
+          $ref: '#/components/responses/CheckNameFailed'
+        '422':
+          $ref: "#/components/responses/InvalidValidation"
+        '500':
+          $ref: '#/components/responses/PostgreSQLError'
+
+  /user:
+    patch:
+      tags: [ User ]
+      summary: Update user's main data
+      description: Updates some user's main data
+      security:
+        - cookieAuth: [ ]
+      requestBody:
+        $ref: "#/components/requestBodies/UserPatch"
+      responses:
+        '200':
+          description: Updated
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: "#/components/responses/InvalidValidation"
+        '500':
+          $ref: '#/components/responses/PostgreSQLError'
+
+  /user/password:
+    patch:
+      tags: [ User ]
+      summary: Update user's password
+      description: Updates user's password by email
+      security:
+        - cookieAuth: [ ]
+      requestBody:
+        $ref: "#/components/requestBodies/UserPasswordPatch"
+      responses:
+        '200':
+          description: Password Updated
+        '400':
+          $ref: '#/components/responses/UserPasswordPatchFailed'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: "#/components/responses/InvalidValidation"
+        '500':
+          $ref: '#/components/responses/PostgreSQLError'
+
+  /user/email:
+    patch:
+      tags: [ User ]
+      summary: Update user's email
+      description: Updates user's email by password
+      security:
+        - cookieAuth: [ ]
+      requestBody:
+        $ref: "#/components/requestBodies/UserEmailPatch"
+      responses:
+        '200':
+          description: Email updated
+        '400':
+          $ref: '#/components/responses/UserEmailPatchFailed'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: "#/components/responses/InvalidValidation"
+        '500':
+          $ref: '#/components/responses/PostgreSQLError'
+
+  /user/image:
+    patch:
+      tags: [ User ]
+      summary: Update user's main image
+      description: Updates user's main image
+      security:
+        - cookieAuth: [ ]
+      requestBody:
+        $ref: "#/components/requestBodies/UserImagePatch"
+      responses:
+        '200':
+          description: Image updated
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '413':
+          $ref: '#/components/responses/ImageTooLarge'
+        '415':
+          $ref: '#/components/responses/UnsupportedImageType'
+        '500':
+          $ref: '#/components/responses/PostgreSQLError'
+
+  /user/name:
+    patch:
+      tags: [ User ]
+      summary: Update user name
+      description: Updates user name
+      security:
+        - cookieAuth: [ ]
+      requestBody:
+        $ref: "#/components/requestBodies/UserNamePatch"
+      responses:
+        '200':
+          description: Name updated
+        '400':
+          $ref: '#/components/responses/UserNamePatchFailed'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: "#/components/responses/InvalidValidation"
+        '500':
+          $ref: '#/components/responses/PostgreSQLError'
+
+  /room:
+    put:
+      tags: [ Room ]
+      summary: Upsert user's room, and connect to it
+      description: Creates (or updates, if exists) the room. Room created once, after first account query.
+      security:
+        - cookieAuth: [ ]
+      requestBody:
+        $ref: "#/components/requestBodies/RoomPut"
+      responses:
+        '200':
+          description: Room opened
+        '400':
+          $ref: '#/components/responses/WebsocketConnectionFailed'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: "#/components/responses/InvalidValidation"
+        '500':
+          $ref: '#/components/responses/PostgreSQLError'
+
+  /room/:name:
+    get:
+      tags: [ Room ]
+      summary: Connect to user's room by websocket
+      description: Open web socket connection to user's room
+      parameters:
+        - $ref: "#/components/parameters/Name"
+      responses:
+        '200':
+          description: Joined to room
+        '400':
+          $ref: '#/components/responses/WebsocketConnectionFailed'
+          # create 403 http status code
+        '422':
+          $ref: "#/components/responses/InvalidValidation"
+        '500':
+          $ref: '#/components/responses/PostgreSQLError'
+
+  /file/*filepath:
+    get:
+      tags: [ Room ]
+      summary: Get server file
+      description: Open any server file by its name and extension
+      parameters:
+        - $ref: '#/components/parameters/FileName'
+      responses:
+        '200':
+          $ref: '#/components/responses/FileGetSuccess'
+        '404':
+          description: File not found
+
+components:
+  schemas:
+
+    Name:
+      type: string
+      pattern: ^[a-zA-Z][a-zA-Z0-9_]{3,18}([a-zA-Z0-9])$
+      example: user95
+      minLength: 5
+      maxLength: 20
+
+    Email:
+      type: string
+      format: email
+      example: example@example.com
+
+    Password:
+      writeOnly: true
+      type: string
+      format: password
+      pattern: ^\w{4,20}$
+      example: Bob2020
+
+    Code:
+      writeOnly: true
+      type: string
+      minLength: 5
+      maxLength: 5
+      example: QUERY
+
+    Theme:
+      type: string
+      enum:
+        - dark
+        - light
+        - system
+      example: system
+
+    Language:
+      type: string
+      enum:
+        - en
+        - ru
+      example: ru
+
+    Role:
+      enum:
+        - user
+        - admin
+      type: string
+      example: user
+
+    ImageName:
+      type: string
+      minLength: 20
+      example: qwertyuioppoiuytrewq.png
+      pattern: ^([a-z]+?)(\.[^.]*)$
+
+    FirstName:
+      type: string
+      example: Bomb
+      minLength: 3
+      maxLength: 32
+
+    LastName:
+      type: string
+      example: Hodovaniuk
+      minLength: 3
+      maxLength: 32
+
+    FriendsIds:
+      type: array
+      readOnly: true
+      items:
+        type: integer
+        uniqueItems: true
+        example:
+          - 17
+          - 884
+          - 6789
+
+    Biography:
+      type: string
+      minLength: 1
+      maxLength: 140
+      example: 23 y.o designer from San Francisco
+
+    IsEmailVerified:
+      type: boolean
+      readOnly: true
+      example: false
+
+    CreateTime:
+      type: string
+      readOnly: true
+      format: date-time
+      example: 2023-06-10T15:06:14.491386+03:00
+
+    Privacy:
+      type: string
+      enum:
+        - public
+        - private
+        - friends
+      example: public
+
+    Sessions:
+      type: array
+      readOnly: true
+      items:
+        type: string
+        uniqueItems: true
+        format: uuid
+        example: [
+          "16688d51-0752-4e29-864c-e9decdb4edbb",
+          "dcbb2492-6dfa-4b29-9c06-06ba4ad0a686"
+        ]
+
+    Image:
+      type: string
+      format: binary
+      example: binary data
+
+    User:
+      type: object
+      readOnly: true
+      required:
+        - name
+        - role
+        - friendsIds
+        - createTime
+      properties:
+        name:
+          $ref: "#/components/schemas/Name"
+        biography:
+          $ref: "#/components/schemas/Biography"
+        role:
+          $ref: "#/components/schemas/Role"
+        friendsIds:
+          $ref: "#/components/schemas/FriendsIds"
+        firstName:
+          $ref: "#/components/schemas/FirstName"
+        lastName:
+          $ref: "#/components/schemas/LastName"
+        createTime:
+          $ref: "#/components/schemas/CreateTime"
+
+    Me:
+      type: object
+      readOnly: true
+      required:
+        - name
+        - role
+        - language
+        - theme
+        - isEmailVerified
+        - createTime
+        - email
+      properties:
+        name:
+          $ref: "#/components/schemas/Name"
+        email:
+          $ref: "#/components/schemas/Email"
+        role:
+          $ref: "#/components/schemas/Role"
+        friendsIds:
+          $ref: '#/components/schemas/FriendsIds'
+        language:
+          $ref: "#/components/schemas/Language"
+        theme:
+          $ref: "#/components/schemas/Theme"
+        firstName:
+          $ref: "#/components/schemas/FirstName"
+        lastName:
+          $ref: "#/components/schemas/LastName"
+        biography:
+          $ref: '#/components/schemas/Biography'
+        createTime:
+          $ref: '#/components/schemas/CreateTime'
+        isEmailVerified:
+          $ref: '#/components/schemas/IsEmailVerified'
+
+    Room:
+      type: object
+      properties:
+        title:
+          $ref: "#/components/schemas/Name"
+        privacy:
+          $ref: "#/components/schemas/Privacy"
+        description:
+          $ref: "#/components/schemas/Biography"
+        password:
+          $ref: '#/components/schemas/Password'
+
+    Error:
+      type: object
+      readOnly: true
+      required:
+        - code
+      properties:
+        description:
+          type: string
+          example: You are not logged in
+
+    ValidationError:
+      type: object
+      readOnly: true
+      properties:
+        fields:
+          type: object
+          uniqueItems: true
+          additionalProperties:
+            type: string
+          example:
+            email: email is not the correct email
+            code: code must have a length of 5
+
+  requestBodies:
+    AuthEmailPost:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - email
+              - code
+            properties:
+              email:
+                $ref: "#/components/schemas/Email"
+              code:
+                $ref: "#/components/schemas/Code"
+    
+    AuthPasswordPost:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - email
+              - password
+            properties:
+              email:
+                $ref: "#/components/schemas/Email"
+              password: 
+                $ref: "#/components/schemas/Password"
+    
+    EmailSendCodePost:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - email
+            properties:
+              email: 
+                $ref: "#/components/schemas/Email"
+
+    UserPatch:
+      required: true
+      content:
+        multipart/form-data:
+          schema:
+            type: object
+            properties:
+              firstName:
+                $ref: "#/components/schemas/FirstName"
+              lastName:
+                $ref: "#/components/schemas/LastName"
+              biography:
+                $ref: "#/components/schemas/Biography"
+              theme:
+                $ref: "#/components/schemas/Theme"
+              language:
+                $ref: "#/components/schemas/Language"
+
+    UserPasswordPatch:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - oldPassword
+              - newPassword
+            properties:
+              oldPassword:
+                $ref: "#/components/schemas/Password"
+              newPassword:
+                $ref: "#/components/schemas/Password"
+
+    UserEmailPatch:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - newEmail
+              - password
+            properties:
+              newEmail:
+                $ref: "#/components/schemas/Email"
+              password:
+                $ref: "#/components/schemas/Password"
+
+    UserImagePatch:
+      required: true
+      content:
+        multipart/form-data:
+          schema:
+            type: object
+            required:
+              - image
+            properties:
+              file:
+                $ref: '#/components/schemas/Image'
+
+    UserNamePatch:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            writeOnly: true
+            required:
+              - name
+            properties:
+              name:
+                $ref: '#/components/schemas/Name'
+
+    RoomPut:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Room'
+
+  parameters:
+    Name:
+      in: path
+      description: Name
+      name: name
+      required: true
+      schema:
+        $ref: "#/components/schemas/Name"
+
+    FileName:
+      in: path
+      description: File name and his extension
+      name: filepath
+      schema:
+        $ref: '#/components/schemas/ImageName'
+
+  responses:
+    SessionGetSuccess:
+      description: User's info by session
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Me'
+
+    UserGetByUsernameSuccess:
+      description: User was successfully got
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/User"
+
+    AuthSuccess:
+      description: OK
+      headers:
+        Set-Cookie:
+          schema:
+            type: string
+            example: session_id=f82f97fd-9930-4133-a6a7-1bccb3b933b4; Path=/api; Domain=localhost; SameSite=None; Secure; HttpOnly;
+
+    FileGetSuccess:
+      description: File was successfully got
+      content:
+        multipart/form-data:
+          schema:
+            $ref: "#/components/schemas/Image"
+
+    Unauthorized:
+      description: User must be authorized
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+
+    InvalidValidation:
+      description: Data entered incorrectly
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationError'
+
+    UnsupportedImageType:
+      description: Image should have .png, .jpg or .jpeg extension
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    ImageTooLarge:
+      description: Image must be smaller than 3000 by 3000 pixels
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    AuthByEmailFailed:
+      description: Invalid email code
+      content:
+        application/json:
+          schema:
+            allOf:
+              - required:
+                  - code
+                properties:
+                  code:
+                    type: string
+                    example: code_invalid_or_expired
+                    enum:
+                      - code_invalid_or_expired
+                      -
+              - $ref: "#/components/schemas/Error"
+
+    AuthByPasswordFailed:
+      description: Failed to authorize user
+      content:
+        application/json:
+          schema:
+            allOf:
+              - required:
+                  - code
+                properties:
+                  code:
+                    type: string
+                    example: invalid_password
+                    enum:
+                      - invalid_password
+                      - password_not_set
+                      - not_found
+              - $ref: "#/components/schemas/Error"
+
+    CheckNameFailed:
+      description: Failed to check name on exist
+      content:
+        application/json:
+          schema:
+            allOf:
+              - required:
+                  - code
+                properties:
+                  code:
+                    type: string
+                    example: already_exist
+                    enum:
+                      - already_exist
+              - $ref: "#/components/schemas/Error"
+
+    UserGetByUsernameFailed:
+      description: Failed to find the user
+      content:
+        application/json:
+          schema:
+            allOf:
+              - required:
+                  - code
+                properties:
+                  code:
+                    type: string
+                    example: not_found
+                    enum:
+                      - not_found
+              - $ref: "#/components/schemas/Error"
+
+    UserPasswordPatchFailed:
+      description: Password is not valid
+      content:
+        application/json:
+          schema:
+            allOf:
+              - required:
+                  - code
+                properties:
+                  code:
+                    type: string
+                    example: invalid_password
+                    enum:
+                      - invalid_password
+              - $ref: "#/components/schemas/Error"
+
+    UserEmailPatchFailed:
+      description: Failed to edit user email
+      content:
+        application/json:
+          schema:
+            allOf:
+              - required:
+                  - code
+                properties:
+                  code:
+                    type: string
+                    example: invalid_password
+                    enum:
+                      - invalid_password
+                      - already_exist
+                      - password_not_set
+              - $ref: "#/components/schemas/Error"
+
+    UserNamePatchFailed:
+      description: User name already exist
+      content:
+        application/json:
+          schema:
+            allOf:
+              - required:
+                  - code
+                properties:
+                  code:
+                    type: string
+                    example: already_exist
+                    enum:
+                      - already_exist
+              - $ref: "#/components/schemas/Error"
+
+    WebsocketConnectionFailed:
+      description: The connection is not a websocket
+      content:
+        application/json:
+          schema:
+            allOf:
+              - required:
+                  - code
+                properties:
+                  code:
+                    type: string
+                    example: websocket_excepted
+                    enum:
+                      - websocket_excepted
+              - $ref: "#/components/schemas/Error"
+
+    PostgreSQLError:
+      description: Lost connection to PostgreSQL
+      content:
+        application/json:
+          schema:
+            allOf:
+              - required:
+                  - code
+                properties:
+                  code:
+                    type: string
+                    example: server_error
+                    enum:
+                      - server_error
+              - $ref: "#/components/schemas/Error"
+
+    DatabaseError:
+      description: Database connection lost
+      content:
+        application/json:
+          schema:
+            allOf:
+              - required:
+                  - code
+                properties:
+                  code:
+                    type: string
+                    example: transaction_failed
+                    enum:
+                      - server_error
+                      - transaction_failed
+              - $ref: "#/components/schemas/Error"
+
+    SendCodeError:
+      description: Can't submit data
+      content:
+        application/json:
+          schema:
+            allOf:
+              - required:
+                  - code
+                properties:
+                  code:
+                    type: string
+                    example: cant_send_mail
+                    enum:
+                      - cant_send_mail
+                      - transaction_failed
+                      - server_error
+              - $ref: "#/components/schemas/Error"
+
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: session_id
