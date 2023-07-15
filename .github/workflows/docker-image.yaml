@@ -43,3 +43,9 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+      - name: Trigger deploy to dev
+        uses: peter-evans/repository-dispatch@v2.1.0
+        with:
+          token: ${{ secrets.PAT }}
+          repository: youtogether-online/releases
+          event-type: deploy-dev
