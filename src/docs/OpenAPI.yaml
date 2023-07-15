@@ -656,6 +656,7 @@ components:
     FileName:
       in: path
       description: File name and his extension
+      required: true
       name: filepath
       schema:
         $ref: '#/components/schemas/ImageName'
