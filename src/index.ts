@@ -24,10 +24,14 @@ const cookieOptions = {
   secure: true,
 };
 
+const generateNameFromFullName = ({ firstName, lastName }: { firstName: string, lastName: string }) => {
+  return `${firstName.slice(0, 3)}${lastName.slice(0, 3)}`.toLowerCase()
+}
+
 app.get("/api/auth/session", (req: Request, res: Response) => {
   if (req.cookies.session_id === cookieValue) {
     const Session: components["schemas"]["Me"] = {
-      name: faker.person.firstName().toString().toLowerCase(),
+      name: generateNameFromFullName({ firstName: faker.person.firstName(), lastName: faker.person.lastName() }), 
       email: "f**m@icloud.com",
       isEmailVerified: true,
       role: "user",
