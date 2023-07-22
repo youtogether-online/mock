@@ -320,6 +320,11 @@ export interface components {
      * @example binary data
      */
     Image: string;
+    /**
+     * Format: uri 
+     * @example https://avatars.githubusercontent.com/u/80841256?s=96&v=4
+     */
+    Avatar: string;
     readonly User: {
       readonly name: components["schemas"]["Name"];
       readonly biography?: components["schemas"]["Biography"];
@@ -328,8 +333,9 @@ export interface components {
       readonly firstName?: components["schemas"]["FirstName"];
       readonly lastName?: components["schemas"]["LastName"];
       readonly createTime: components["schemas"]["CreateTime"];
+      readonly avatar: components["schemas"]["Avatar"];
     };
-    readonly Me: {
+    readonly Session: {
       readonly name: components["schemas"]["Name"];
       readonly email: components["schemas"]["Email"];
       readonly role: components["schemas"]["Role"];
@@ -341,6 +347,7 @@ export interface components {
       readonly biography?: components["schemas"]["Biography"];
       readonly createTime: components["schemas"]["CreateTime"];
       readonly isEmailVerified: components["schemas"]["IsEmailVerified"];
+      readonly avatar: components["schemas"]["Avatar"];
     };
     Room: {
       title?: components["schemas"]["Name"];
@@ -368,7 +375,7 @@ export interface components {
     /** @description User's info by session */
     SessionGetSuccess: {
       content: {
-        "application/json": components["schemas"]["Me"];
+        "application/json": components["schemas"]["Session"];
       };
     };
     /** @description User was successfully got */

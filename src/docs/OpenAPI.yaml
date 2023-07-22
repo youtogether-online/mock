@@ -427,6 +427,11 @@ components:
       format: binary
       example: binary data
 
+    Avatar:
+      type: string
+      format: uri
+      example: https://avatars.githubusercontent.com/u/80841256?s=96&v=4
+
     User:
       type: object
       readOnly: true
@@ -435,6 +440,7 @@ components:
         - role
         - friendsIds
         - createTime
+        - avatar
       properties:
         name:
           $ref: "#/components/schemas/Name"
@@ -450,8 +456,10 @@ components:
           $ref: "#/components/schemas/LastName"
         createTime:
           $ref: "#/components/schemas/CreateTime"
+        avatar:
+          $ref: "#/components/schemas/Avatar"
 
-    Me:
+    Session:
       type: object
       readOnly: true
       required:
@@ -462,6 +470,7 @@ components:
         - isEmailVerified
         - createTime
         - email
+        - avatar
       properties:
         name:
           $ref: "#/components/schemas/Name"
@@ -485,6 +494,8 @@ components:
           $ref: '#/components/schemas/CreateTime'
         isEmailVerified:
           $ref: '#/components/schemas/IsEmailVerified'
+        avatar:
+          $ref: "#/components/schemas/Avatar"
 
     Room:
       type: object
@@ -667,7 +678,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Me'
+            $ref: '#/components/schemas/Session'
 
     UserGetByUsernameSuccess:
       description: User was successfully got

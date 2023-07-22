@@ -24,20 +24,31 @@ const cookieOptions = {
   secure: true,
 };
 
-const generateNameFromFullName = ({ firstName, lastName }: { firstName: string, lastName: string }) => {
-  return `${firstName.slice(0, 3)}${lastName.slice(0, 3)}`.toLowerCase()
-}
+const generateNameFromFullName = ({
+  firstName,
+  lastName,
+}: {
+  firstName: string;
+  lastName: string;
+}) => {
+  // return `${firstName.slice(0, 3)}${lastName.slice(0, 3)}`.toLowerCase()
+  return "frkam";
+};
 
 app.get("/api/auth/session", (req: Request, res: Response) => {
   if (req.cookies.session_id === cookieValue) {
-    const Session: components["schemas"]["Me"] = {
-      name: generateNameFromFullName({ firstName: faker.person.firstName(), lastName: faker.person.lastName() }), 
+    const Session: components["schemas"]["Session"] = {
+      name: generateNameFromFullName({
+        firstName: faker.person.firstName(),
+        lastName: faker.person.lastName(),
+      }),
       email: "f**m@icloud.com",
       isEmailVerified: true,
       role: "user",
       language: "en",
       theme: "system",
       createTime: "2023-07-01T13:03:02.883385Z",
+      avatar: faker.image.avatar(),
     };
 
     res.status(200).json(Session);
@@ -46,6 +57,10 @@ app.get("/api/auth/session", (req: Request, res: Response) => {
       description: "Unauthorized",
     });
   }
+});
+
+app.delete("/api/auth/session", (req: Request, res: Response) => {
+  res.status(200).clearCookie("session_id").json();
 });
 
 app.post("/api/email/send-code", (req: Request, res: Response) => {
