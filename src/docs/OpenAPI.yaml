@@ -161,7 +161,7 @@ paths:
         $ref: "#/components/requestBodies/UserPatch"
       responses:
         '200':
-          description: Updated
+          $ref: "#/components/responses/UserPatchSuccess"
         '401':
           $ref: '#/components/responses/Unauthorized'
         '422':
@@ -201,7 +201,7 @@ paths:
         $ref: "#/components/requestBodies/UserEmailPatch"
       responses:
         '200':
-          description: Email updated
+          $ref: "#/components/responses/UserEmailPatchSuccess"
         '400':
           $ref: '#/components/responses/UserEmailPatchFailed'
         '401':
@@ -243,7 +243,7 @@ paths:
         $ref: "#/components/requestBodies/UserNamePatch"
       responses:
         '200':
-          description: Name updated
+          $ref: "#/components/responses/UserNamePatchSuccess"
         '400':
           $ref: '#/components/responses/UserNamePatchFailed'
         '401':
@@ -310,7 +310,7 @@ components:
 
     Name:
       type: string
-      pattern: ^[a-zA-Z][a-zA-Z0-9_]{3,18}([a-zA-Z0-9])$
+      pattern: ^[a-z][a-z0-9_]{3,18}([a-z0-9])$
       example: user95
       minLength: 5
       maxLength: 20
@@ -578,7 +578,7 @@ components:
     UserPatch:
       required: true
       content:
-        multipart/form-data:
+        application/json:
           schema:
             type: object
             properties:
@@ -694,6 +694,28 @@ components:
           schema:
             type: string
             example: session_id=f82f97fd-9930-4133-a6a7-1bccb3b933b4; Path=/api; Domain=localhost; SameSite=None; Secure; HttpOnly;
+
+    UserPatchSuccess:
+      description: User data was successfully changed
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/User"
+
+    UserEmailPatchSuccess:
+      description: User email was successfully changed
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/User"
+
+    UserNamePatchSuccess:
+      description: User name was successfully changed
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/User"
+
 
     FileGetSuccess:
       description: File was successfully got

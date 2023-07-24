@@ -24,34 +24,29 @@ const cookieOptions = {
   secure: true,
 };
 
-const generateNameFromFullName = ({
+const firstName = faker.person.firstName();
+const lastName = faker.person.lastName();
+
+const session: components["schemas"]["Session"] = {
+  name: faker.internet
+    .userName({ firstName, lastName })
+    .toLowerCase()
+    .slice(0, 18)
+    .replace(/([^a-z0-9_]+)/gi, ""),
+  email: "f**m@icloud.com",
+  isEmailVerified: true,
+  role: "user",
+  language: "en",
+  theme: "system",
+  createTime: "2023-07-01T13:03:02.883385Z",
+  avatar: faker.image.avatar(),
   firstName,
   lastName,
-}: {
-  firstName: string;
-  lastName: string;
-}) => {
-  // return `${firstName.slice(0, 3)}${lastName.slice(0, 3)}`.toLowerCase()
-  return "frkam";
 };
 
 app.get("/api/auth/session", (req: Request, res: Response) => {
   if (req.cookies.session_id === cookieValue) {
-    const Session: components["schemas"]["Session"] = {
-      name: generateNameFromFullName({
-        firstName: faker.person.firstName(),
-        lastName: faker.person.lastName(),
-      }),
-      email: "f**m@icloud.com",
-      isEmailVerified: true,
-      role: "user",
-      language: "en",
-      theme: "system",
-      createTime: "2023-07-01T13:03:02.883385Z",
-      avatar: faker.image.avatar(),
-    };
-
-    res.status(200).json(Session);
+    res.status(200).json(session);
   } else {
     res.status(401).json({
       description: "Unauthorized",
