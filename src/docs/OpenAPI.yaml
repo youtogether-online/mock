@@ -700,21 +700,21 @@ components:
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/User"
+            $ref: "#/components/schemas/Session"
 
     UserEmailPatchSuccess:
       description: User email was successfully changed
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/User"
+            $ref: "#/components/schemas/Session"
 
     UserNamePatchSuccess:
       description: User name was successfully changed
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/User"
+            $ref: "#/components/schemas/Session"
 
 
     FileGetSuccess:

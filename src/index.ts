@@ -105,6 +105,12 @@ app.post("/api/auth/password", (req: Request, res: Response) => {
   res.status(500);
 });
 
+app.patch("/api/user", (req: Request, res: Response) => {
+  // @ts-ignore
+  session["theme"] = req.body.theme;
+  res.status(200).json(session);
+});
+
 app.listen(port, () => {
   console.log(`⚡️[server]: Server is running at http://localhost:${port}`);
 });
