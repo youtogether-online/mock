@@ -106,8 +106,15 @@ app.post("/api/auth/password", (req: Request, res: Response) => {
 });
 
 app.patch("/api/user", (req: Request, res: Response) => {
-  // @ts-ignore
-  session["theme"] = req.body.theme;
+  if (req.body?.language) {
+    // @ts-ignore
+    session["language"] = req.body.language;
+  }
+  if (req.body?.theme) {
+    // @ts-ignore
+    session["theme"] = req.body?.theme;
+  }
+
   res.status(200).json(session);
 });
 
